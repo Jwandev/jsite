@@ -734,7 +734,7 @@ const cabos = [];
    ENTORNO: o mesmo da maquete do entorno (modelo da região), girado para ficar alinhado ao prédio.
    Referencial das ruas: s ao longo da Trairi/Mipibu, n para o norte. O Bio fica no lote com 2,3° de giro.
    ===================================================================== */
-let mundo, L, loteSup, halos, ME_lampada; const JN = [];
+let mundo, L, loteSup, halos, ME_lampada, ESTACIONADOS = []; const JN = [];
 const matGlow = (() => { const c = document.createElement('canvas'); c.width = c.height = 128; const x = c.getContext('2d');
   const g = x.createRadialGradient(64, 64, 0, 64, 64, 64); g.addColorStop(0, 'rgba(255,214,150,0.9)'); g.addColorStop(0.4, 'rgba(255,190,110,0.35)'); g.addColorStop(1, 'rgba(255,170,90,0)');
   x.fillStyle = g; x.fillRect(0, 0, 128, 128); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
@@ -935,6 +935,7 @@ function lajeCor(hex) { cor.set(hex || '#d8d8d4').getHSL(hsl); return new THREE.
   haste.castShadow = true; mundo.add(haste, cab);
   halos = new THREE.InstancedMesh(new THREE.PlaneGeometry(11, 11).rotateX(-Math.PI / 2), matGlow, Math.max(1, postes.length)); halos.count = postes.length;
   postes.forEach(([s, n], k) => { const [x, z] = L(s, n); halos.setMatrixAt(k, m4.makeTranslation(x, GY + 0.07, z)); }); mundo.add(halos);
+  ESTACIONADOS = carros.slice();
   const CC = ['#d9dde1', '#2f3439', '#8a1f24', '#c9ccd0', '#1f3d63', '#e6e6e6', '#5a5f63', '#7a8a5a'];
   const corpo = new THREE.InstancedMesh(cubo, ME.carro, carros.length), cabine = new THREE.InstancedMesh(cubo, ME.carro, carros.length), off = new THREE.Vector3();
   carros.forEach(([s, n, a, yb = GY], k) => { const [x, z] = L(s, n); q.setFromEuler(e.set(0, a, 0));
@@ -975,6 +976,293 @@ function noiteEntorno(noite) {
     j.im.instanceColor.needsUpdate = true;
   }
 }
+/* =====================================================================
+   TRÂNSITO: carros e motos andando (mão direita), parando no semáforo, contornando as rotatórias,
+   estacionando na guia e virando à direita onde o canteiro é contínuo; pedestres nas calçadas.
+   Referencial das ruas: s (leste) e n (norte); L(s, n) leva para o mundo do entorno.
+   ===================================================================== */
+const TRANSITO = (() => {
+  let sem = 4242;
+  const rn = () => { sem |= 0; sem = (sem + 0x6D2B79F5) | 0; let t = Math.imul(sem ^ (sem >>> 15), 1 | sem); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+  const rg = (a, b) => a + rn() * (b - a);
+  const [bs0, bn0, bs1, bn1] = D.base;
+  const ROT = D.rotatorias || [];
+  const bloqueado = (sc, n) => (D.canteiroContinuo || []).some(([s, a, b]) => Math.abs(s - sc) < 1 && n > a && n < b);
+  const tipoRua = (sc) => Math.abs(sc - 73.94) < 1 ? 'hermes' : Math.abs(sc + 56.38) < 1 ? 'afonso' : 'local';
+  const DENS = { hermes: 1 / 22, afonso: 1 / 42, local: 1 / 85, h: 1 / 75 };      // veículos por metro de faixa
+  const PESO = { hermes: 1, afonso: 0.5, local: 0.1, h: 0.14 };                     // chance de entrar por cada faixa
+
+  /* ---------- faixas ---------- */
+  const FX = [];
+  const novaFaixa = (o) => { o.id = FX.length; o.cruz = []; o.saidas = []; o.vagas = []; FX.push(o); return o; };
+  for (const [sc, w, na, nb, cant] of D.viasV) {
+    const tipo = tipoRua(sc), est = w / 2 - 1.4;
+    if (cant > 0) {
+      const ext = est - 3.2, int = Math.max(cant / 2 + 1.9, ext - 3.3);
+      for (const dir of [1, -1]) for (const [off, externa] of [[int, false], [ext, true]])
+        novaFaixa({ eixo: 'n', c: sc, off: dir * off, dir, a: na, b: nb, tipo, w, externa, offEst: externa ? dir * est : null, borda0: true, borda1: true });
+    } else if (w < 7) novaFaixa({ eixo: 'n', c: sc, off: 0, dir: 1, a: na, b: nb, tipo, w, externa: true, offEst: est, borda0: true, borda1: true });
+    else for (const dir of [1, -1]) novaFaixa({ eixo: 'n', c: sc, off: dir * 1.0, dir, a: na, b: nb, tipo, w, externa: true, offEst: dir * est, borda0: true, borda1: true });
+  }
+  // ruas H: mão direita -> leste (+s) fica ao sul do eixo (n menor); trechos cortados onde o canteiro da avenida é contínuo
+  for (const [nc, w, sa, sb] of D.viasH) {
+    const cortes = D.viasV.filter(([sc]) => bloqueado(sc, nc)).map(([sc, wv]) => [sc - wv / 2 - 1.5, sc + wv / 2 + 1.5]).sort((x, y) => x[0] - y[0]);
+    let ini = sa; const trechos = [];
+    for (const [c0, c1] of cortes) { if (c0 > ini + 10) trechos.push([ini, c0]); ini = Math.max(ini, c1); }
+    if (sb > ini + 10) trechos.push([ini, sb]);
+    for (const [a, b] of trechos) for (const dir of [1, -1])
+      novaFaixa({ eixo: 's', c: nc, off: -dir * 1.0, dir, a, b, tipo: 'h', w, externa: true, offEst: -dir * (w / 2 - 1.4), borda0: a <= bs0 + 1, borda1: b >= bs1 - 1 });
+  }
+  const ini = (f) => (f.dir > 0 ? f.a : f.b), fim = (f) => (f.dir > 0 ? f.b : f.a);
+  const rotEm = (f) => ROT.filter(([rs, rn_]) => (f.eixo === 'n' ? Math.abs(rs - f.c) < 1 : Math.abs(rn_ - f.c) < 1));
+  // cruzamentos com semáforo e rotatórias no caminho de cada faixa (coordenada de parada)
+  const semaforos = new Map();
+  for (const f of FX) {
+    const cruza = f.eixo === 'n' ? D.viasH.map(([nc, w2, sa, sb]) => [nc, w2, f.c >= sa && f.c <= sb && !bloqueado(f.c, nc)])
+      : D.viasV.map(([sc, w2]) => [sc, w2, !bloqueado(sc, f.c)]);
+    for (const [u, w2, ok] of cruza) {
+      if (!ok || u <= f.a + 2 || u >= f.b - 2) continue;
+      const rot = ROT.find(([rs, rn_]) => (f.eixo === 'n' ? Math.abs(rs - f.c) < 1 && Math.abs(rn_ - u) < 1 : Math.abs(rs - u) < 1 && Math.abs(rn_ - f.c) < 1));
+      const chave = f.eixo === 'n' ? `${f.c}|${u}` : `${u}|${f.c}`;
+      if (!rot && !semaforos.has(chave)) semaforos.set(chave, { ofs: rg(0, 26) });
+      const R = rot ? rot[2] + 2.3 : 0;
+      f.cruz.push({ u, parar: u - f.dir * (rot ? R + 4.5 : w2 / 2 + 3.4), rot, R, sem: rot ? null : semaforos.get(chave), w2 });
+    }
+    f.cruz.sort((x, y) => (x.u - y.u) * f.dir);
+  }
+  // conversões à direita onde a rua H termina no canteiro contínuo
+  const externaV = (sc, dir) => FX.find((g) => g.eixo === 'n' && Math.abs(g.c - sc) < 1 && g.dir === dir && g.externa);
+  for (const f of FX) {
+    if (f.eixo !== 's') continue;
+    const vFim = D.viasV.find(([sc, wv]) => Math.abs(fim(f) - (sc - f.dir * wv / 2)) < 2.5);
+    if (vFim && !(f.dir > 0 ? f.borda1 : f.borda0)) f.viraFim = { para: externaV(vFim[0], -f.dir), n: f.c - f.dir * 4 };
+    const vIni = D.viasV.find(([sc, wv]) => Math.abs(ini(f) - (sc + f.dir * wv / 2)) < 2.5);
+    if (vIni && !(f.dir > 0 ? f.borda0 : f.borda1)) { const g = externaV(vIni[0], f.dir); if (g) g.saidas.push({ u: f.c - g.dir * 4, para: f }); }
+  }
+  // vagas livres na guia (sem carro parado, longe de cruzamentos e rotatórias)
+  const parados = (ESTACIONADOS || []).filter(([s, n, a, y]) => y === undefined);
+  for (const f of FX) {
+    if (f.offEst === null) continue;
+    for (let u = f.a + 14; u < f.b - 14; u += 6.2) {
+      const [s, n] = f.eixo === 'n' ? [f.c + f.offEst, u] : [u, f.c + f.offEst];
+      if (s < bs0 + 4 || s > bs1 - 4 || n < bn0 + 4 || n > bn1 - 4) continue;
+      if (f.cruz.some((c) => Math.abs(u - c.u) < (c.rot ? c.R + 12 : c.w2 / 2 + 9))) continue;
+      if (f.saidas.some((x) => Math.abs(u - x.u) < 14) || (f.viraFim && Math.abs(u - fim(f)) < 14)) continue;
+      if (parados.some(([ps, pn]) => Math.hypot(ps - s, pn - n) < 5.6)) continue;
+      f.vagas.push({ u, livre: true });
+    }
+  }
+
+  /* ---------- posição no mundo (com o desvio em volta das rotatórias) ---------- */
+  function posFaixa(f, u, lat) {
+    let l = lat;
+    for (const [rs, rn_, r] of rotEm(f)) {
+      const d = u - (f.eixo === 'n' ? rn_ : rs), R = r + 2.3;
+      if (Math.abs(d) < R) l = Math.sign(lat || f.dir) * Math.max(Math.abs(l), Math.sqrt(R * R - d * d));
+    }
+    return f.eixo === 'n' ? [f.c + l, u] : [u, f.c + l];
+  }
+
+  /* ---------- veículos ---------- */
+  const V = [];
+  const comp = (v) => (v.moto ? 2.0 : 4.3);
+  function criar(f, u, moto) {
+    const v = { f, u, lat: f.off, v: 0, moto, v0: (moto ? rg(11, 13.5) : rg(8.5, 11)) * (f.tipo === 'hermes' ? 1.08 : f.tipo === 'local' || f.tipo === 'h' ? 0.75 : 1),
+      est: 'anda', vaga: null, tEst: rg(6, 45), querEst: !moto && f.offEst !== null && rn() < 0.45, ang: 0, s: 0, n: 0, vis: true, saida: null, curva: null };
+    v.v = v.v0 * 0.7; v.id = V.length; V.push(v); return v;
+  }
+  for (const f of FX) {
+    const len = f.b - f.a, nv = Math.floor(len * (DENS[f.tipo] || 0.01) * (f.externa ? 1 : 1.2) * (f.borda0 || f.borda1 ? 1 : 0.5));
+    for (let k = 0; k < nv; k++) {
+      const u = f.a + (k + 0.5 + rg(-0.3, 0.3)) * len / nv;
+      if (f.cruz.some((c) => Math.abs(u - c.u) < (c.rot ? c.R + 2 : c.w2 / 2 + 2))) continue;
+      criar(f, u, rn() < (f.tipo === 'hermes' || f.tipo === 'afonso' ? 0.24 : 0.1));
+    }
+  }
+  // alguns já estacionados para o começo
+  for (const v of V) if (v.querEst && rn() < 0.25) { const g = v.f.vagas.filter((x) => x.livre); if (g.length) { const x = g[Math.floor(rn() * g.length)]; x.livre = false; v.vaga = x; v.u = x.u; v.lat = v.f.offEst; v.v = 0; v.est = 'parado'; v.tEst = rg(4, 30); } }
+  const entradas = FX.filter((f) => (f.dir > 0 ? f.borda0 : f.borda1));
+  const pesoTotal = entradas.reduce((s, f) => s + PESO[f.tipo], 0);
+  const livreEm = (f, u, raio, exceto) => !V.some((o) => o !== exceto && o.vis && ((o.f === f && o.est !== 'parado' && o.est !== 'curva' && Math.abs(o.u - u) < raio) || (o.est === 'curva' && o.curva.para === f && Math.abs(o.curva.uPara - u) < raio)));
+  function reentrar(v) {
+    let r = rn() * pesoTotal, f = entradas[0];
+    for (const g of entradas) { r -= PESO[g.tipo]; if (r <= 0) { f = g; break; } }
+    const u0 = ini(f) + f.dir * 1;
+    if (!livreEm(f, u0, 14, v)) return false;
+    Object.assign(v, { f, u: u0, lat: f.off, est: 'anda', vis: true, saida: null, decSaida: null, curva: null, vaga: null, v: v.v0 * 0.8, tEst: rg(10, 50) });
+    return true;
+  }
+
+  // malhas (mesmo estilo dos carros parados)
+  const caixa1 = new THREE.BoxGeometry(1, 1, 1).translate(0, 0.5, 0);
+  const matV = new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.4, metalness: 0.15 });
+  const matF = new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.7 });
+  const NC = V.filter((v) => !v.moto).length, NM = V.length - NC;
+  const corpo = new THREE.InstancedMesh(caixa1, matV, Math.max(1, NC)), cabine = new THREE.InstancedMesh(caixa1, matV, Math.max(1, NC));
+  const mCorpo = new THREE.InstancedMesh(caixa1, matV, Math.max(1, NM)), mPiloto = new THREE.InstancedMesh(caixa1, matF, Math.max(1, NM));
+  const mCapacete = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(0.19, 1), matV, Math.max(1, NM));
+  const CORES = ['#d9dde1', '#2f3439', '#8a1f24', '#c9ccd0', '#1f3d63', '#e6e6e6', '#5a5f63', '#7a8a5a', '#b8b0a2'];
+  const cC = new THREE.Color();
+  let ic = 0, im = 0;
+  for (const v of V) {
+    if (v.moto) { v.k = im++; mCorpo.setColorAt(v.k, cC.set(['#a3222a', '#22262b', '#2f4f86', '#d9d9d9'][Math.floor(rn() * 4)])); mPiloto.setColorAt(v.k, cC.set(['#2e3a4f', '#5b4636', '#3d3d3d', '#7a2f2f'][Math.floor(rn() * 4)])); mCapacete.setColorAt(v.k, cC.set(['#f2f2f2', '#1d1d1d', '#c0392b', '#f0b429'][Math.floor(rn() * 4)])); }
+    else { v.k = ic++; cC.set(CORES[Math.floor(rn() * CORES.length)]); corpo.setColorAt(v.k, cC); cabine.setColorAt(v.k, cC.clone().multiplyScalar(0.75)); }
+  }
+  for (const m of [corpo, cabine, mCorpo, mPiloto, mCapacete]) { m.castShadow = true; m.instanceMatrix.setUsage(THREE.DynamicDrawUsage); mundo.add(m); }
+
+  /* ---------- pedestres nas calçadas (fora da quadra do Bio e do ONE) ---------- */
+  const P = [];
+  const temLote = (q) => D.nossos.some((pl) => pl.some(([s, n]) => s > q[0] && s < q[2] && n > q[1] && n < q[3]));
+  const lados = [];
+  for (const q of D.quadras) {
+    if (temLote(q)) continue; const [s0, n0, s1, n1, real] = q, m = D.cal * 0.62;
+    if (real.s) lados.push(['s', n0 + m, s0 + 3, s1 - 3]); if (real.n) lados.push(['s', n1 - m, s0 + 3, s1 - 3]);
+    if (real.o) lados.push(['n', s0 + m, n0 + 3, n1 - 3]); if (real.l) lados.push(['n', s1 - m, n0 + 3, n1 - 3]);
+  }
+  const dentroBase = (s, n) => s > bs0 + 3 && s < bs1 - 3 && n > bn0 + 3 && n < bn1 - 3;
+  for (let k = 0; k < 14 && lados.length; k++) {
+    const [eixo, c, a0, b0] = lados[Math.floor(rn() * lados.length)];
+    const a = Math.max(a0, eixo === 's' ? bs0 + 4 : bn0 + 4), b = Math.min(b0, eixo === 's' ? bs1 - 4 : bn1 - 4);
+    if (b - a < 12) continue;
+    P.push({ eixo, c, a, b, u: rg(a, b), dir: rn() < 0.5 ? 1 : -1, vel: rg(1.1, 1.5), pausa: 0, fase: rg(0, 6) });
+  }
+  const NP = Math.max(1, P.length);
+  const pPernas = new THREE.InstancedMesh(caixa1, matF, NP), pTronco = new THREE.InstancedMesh(caixa1, matF, NP), pCabeca = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(0.15, 1), matF, NP);
+  P.forEach((p, k) => {
+    pPernas.setColorAt(k, cC.set(['#2c3440', '#3b3b3b', '#5a4a3a', '#1f2a44', '#6b6f75'][Math.floor(rn() * 5)]));
+    pTronco.setColorAt(k, cC.set(['#c0392b', '#2e86c1', '#f4d03f', '#ecf0f1', '#27ae60', '#8e44ad', '#e67e22', '#34495e'][Math.floor(rn() * 8)]));
+    pCabeca.setColorAt(k, cC.set(['#f1c7a5', '#c68e65', '#8d5a3b', '#e0ac85'][Math.floor(rn() * 4)]));
+  });
+  for (const m of [pPernas, pTronco, pCabeca]) { m.castShadow = true; m.count = P.length; m.instanceMatrix.setUsage(THREE.DynamicDrawUsage); mundo.add(m); }
+
+  /* ---------- passo da simulação ---------- */
+  const m4 = new THREE.Matrix4(), pq = new THREE.Vector3(), qq = new THREE.Quaternion(), eu = new THREE.Euler(), sv = new THREE.Vector3(), of = new THREE.Vector3(), ZERO = new THREE.Matrix4().makeScale(0, 0, 0);
+  const sinal = (c, t, eixo) => { const ph = (t + c.sem.ofs) % 26; return eixo === 'n' ? ph < 11 : ph >= 13 && ph < 24; };
+  const ss = (x) => x * x * (3 - 2 * x);
+  const ocupaFaixa = (o) => o.vis && o.est !== 'parado' && o.est !== 'curva' && Math.abs(o.lat - o.f.off) < 1.3;
+  let relogio = 0;
+  function bezier(c, t) { const a = 1 - t; return [a * a * c.p0[0] + 2 * a * t * c.c[0] + t * t * c.p1[0], a * a * c.p0[1] + 2 * a * t * c.c[1] + t * t * c.p1[1]]; }
+  function iniciarCurva(v, para, uPara) {
+    const p0 = posFaixa(v.f, v.u, v.lat), p1 = posFaixa(para, uPara, para.off);
+    const cc = v.f.eixo === 'n' ? [p0[0], p1[1]] : [p1[0], p0[1]];
+    const L_ = Math.hypot(cc[0] - p0[0], cc[1] - p0[1]) + Math.hypot(p1[0] - cc[0], p1[1] - cc[1]);
+    v.curva = { p0, c: cc, p1, t: 0, dur: L_ * 0.9 / Math.max(3.5, v.v), para, uPara }; v.est = 'curva';
+  }
+  function passo(dt) {
+    relogio += dt;
+    const porFaixa = new Map(), pos = (f, v, u) => { if (!porFaixa.has(f)) porFaixa.set(f, []); porFaixa.get(f).push([v, u]); };
+    for (const v of V) {
+      if (!v.vis) continue;
+      if (v.est === 'curva') { if (v.curva.t > 0.4) pos(v.curva.para, v, v.curva.uPara); }   // quem está virando já ocupa a faixa de destino
+      else if (ocupaFaixa(v)) pos(v.f, v, v.u);
+    }
+    for (const v of V) {
+      if (!v.vis) { reentrar(v); continue; }
+      const f = v.f;
+      if (v.est === 'curva') {
+        const c = v.curva, adiante = !V.some((o) => o !== v && o.vis && o.f === c.para && o.est !== 'parado' && o.est !== 'curva' && (o.u - c.uPara) * c.para.dir > -2.6 && (o.u - c.uPara) * c.para.dir < 6);
+        if (c.t < 0.95 || adiante) c.t = Math.min(1, c.t + dt / c.dur);
+        if (c.t >= 1) Object.assign(v, { f: c.para, u: c.uPara, lat: c.para.off, est: 'anda', curva: null, saida: null, decSaida: null });
+        continue;
+      }
+      if (v.est === 'parado') {
+        v.tEst -= dt;
+        if (v.tEst <= 0 && livreEm(f, v.u - f.dir * 8, 9, v)) { v.est = 'saindo'; v.uSai = v.u; }
+        continue;
+      }
+      // obstáculo à frente: veículo, semáforo, rotatória, vaga ou fim de faixa
+      let gap = 1e9, vLider = 0;
+      for (const [o, uo] of porFaixa.get(f) || []) {       // líder: o mais próximo à frente na mesma faixa
+        if (o === v) continue; const d = (uo - v.u) * f.dir; if (d <= 0.01) continue;
+        if (o.est === 'curva' && d < 5) continue;            // quem já está colado na entrada da conversão tem a vez; o que vira espera
+        const g = d - (comp(o) + comp(v)) / 2; if (g < gap) { gap = g; vLider = o.v; } }
+      const obst = (uAlvo, folga = 0) => { const d = (uAlvo - v.u) * f.dir - comp(v) / 2 - folga; if (d > -0.5 && d < gap) { gap = Math.max(0.01, d); vLider = 0; } };
+      let lim = v.v0;
+      for (const c of f.cruz) {
+        const d = (c.parar - v.u) * f.dir;
+        if (d < -1 || d > 60) continue;
+        if (c.rot) {
+          lim = Math.min(lim, 6.5);
+          const dc = (o) => Math.hypot(...((p) => [p[0] - c.rot[0], p[1] - c.rot[1]])(o.est === 'curva' ? bezier(o.curva, o.curva.t) : posFaixa(o.f, o.u, o.lat)));
+          // dentro da rotatória quem já está circulando tem preferência; empate na entrada: o de menor número passa
+          const ocupada = V.some((o) => o.vis && o !== v && o.f.eixo !== f.eixo && o.est !== 'parado' && (dc(o) < c.R + 3.5 || (dc(o) < c.R + 5.5 && o.id < v.id && o.v > 0.5)));
+          if (ocupada && d > 0.3) obst(c.parar);
+        } else if (!sinal(c, relogio, f.eixo) && d > 0.3 && !(d < 3 && v.v > 6)) obst(c.parar);
+        break;
+      }
+      // conversão à direita (avenida -> rua H) e fim de trecho com conversão
+      if (!v.saida && f.saidas.length && v.est === 'anda') { const s_ = f.saidas.find((x) => (x.u - v.u) * f.dir > 30 && (x.u - v.u) * f.dir < 45); if (s_ && v.decSaida !== s_) { v.decSaida = s_; if (rn() < 0.3) v.saida = s_; } }
+      if (v.saida) { const d = (v.saida.u - v.u) * f.dir; if (d < 25) lim = Math.min(lim, 4.5); if (d <= 0.3) { if (livreEm(v.saida.para, ini(v.saida.para) + v.saida.para.dir * 3, 10, v)) { iniciarCurva(v, v.saida.para, ini(v.saida.para) + v.saida.para.dir * 3); continue; } obst(v.saida.u); } }
+      if (f.viraFim) { const d = (fim(f) - v.u) * f.dir; if (d < 25) lim = Math.min(lim, 4.5); if (d <= 0.6) { const g = f.viraFim.para; if (g && livreEm(g, f.viraFim.n, 10, v)) { iniciarCurva(v, g, f.viraFim.n); continue; } obst(fim(f)); } }
+      // estacionar
+      if (v.est === 'anda' && v.querEst) {
+        v.tEst -= dt;
+        if (v.tEst <= 0) { const g = f.vagas.find((x) => x.livre && (x.u - v.u) * f.dir > 22 && (x.u - v.u) * f.dir < 80); if (g) { g.livre = false; v.vaga = g; v.est = 'estacionando'; } else v.tEst = rg(4, 10); }
+      }
+      if (v.est === 'estacionando') {
+        const d = (v.vaga.u - v.u) * f.dir;
+        obst(v.vaga.u + f.dir * 2, -comp(v) / 2);           // o IDM para 2 m antes do obstáculo: assim o carro para em cima da vaga
+        if (d < 14) v.lat = f.off + (f.offEst - f.off) * ss(Math.min(1, Math.max(0, 1 - d / 14)));
+        if (d < 0.6 && v.v < 0.6) { v.est = 'parado'; v.lat = f.offEst; v.v = 0; v.tEst = rg(10, 30); continue; }
+      }
+      if (v.est === 'saindo') {
+        const d = (v.u - v.uSai) * f.dir; v.lat = f.offEst + (f.off - f.offEst) * ss(Math.min(1, d / 12)); lim = Math.min(lim, 6);
+        if (d >= 12) { v.est = 'anda'; v.lat = f.off; v.vaga.livre = true; v.vaga = null; v.querEst = rn() < 0.35; v.tEst = rg(20, 60); }
+      }
+      // IDM
+      const s0 = 2, T = 1.2, amax = v.moto ? 2.6 : 1.9, bconf = 3;
+      const sEstrela = s0 + Math.max(0, v.v * T + v.v * (v.v - vLider) / (2 * Math.sqrt(amax * bconf)));
+      let a = amax * (1 - Math.pow(v.v / Math.max(0.1, lim), 4) - Math.pow(sEstrela / Math.max(0.05, gap), 2));
+      a = Math.max(-9, Math.min(amax, a)); v.v = Math.max(0, v.v + a * dt);
+      if (v.est === 'estacionando') { const d = (v.vaga.u - v.u) * f.dir; if (d > 0.5 && d < 3) v.v = Math.max(v.v, 0.9); if (d < 0) v.v = 0; }
+      v.u += f.dir * v.v * dt;
+      if ((fim(f) - v.u) * f.dir < 0 && !f.viraFim) { v.vis = false; if (v.vaga) { v.vaga.livre = true; v.vaga = null; } }
+    }
+    // pedestres
+    for (const p of P) {
+      if (p.pausa > 0) { p.pausa -= dt; continue; }
+      p.u += p.dir * p.vel * dt; p.fase += dt * p.vel * 5.5;
+      if (p.u > p.b || p.u < p.a) { p.u = Math.min(p.b, Math.max(p.a, p.u)); p.dir *= -1; p.pausa = rg(0.5, 3); }
+    }
+  }
+  function desenhar() {
+    for (const v of V) {
+      const m = v.moto ? [mCorpo, mPiloto, mCapacete] : [corpo, cabine];
+      if (!v.vis) { for (const x of m) x.setMatrixAt(v.k, ZERO); continue; }
+      let s, n, alvo;
+      if (v.est === 'curva') { const c = v.curva; [s, n] = bezier(c, c.t); const [s2, n2] = bezier(c, Math.min(1, c.t + 0.04)); alvo = Math.atan2(n2 - n, s2 - s) || v.ang; if (c.t > 0.98) alvo = v.ang; }
+      else { [s, n] = posFaixa(v.f, v.u, v.lat); const [s2, n2] = posFaixa(v.f, v.u + v.f.dir * 0.6, v.lat); alvo = Math.atan2(n2 - n, s2 - s); }
+      let d = alvo - v.ang; d = Math.atan2(Math.sin(d), Math.cos(d)); v.ang += d * Math.min(1, 0.25 + (v.est === 'curva' ? 0.6 : 0.3));
+      const [x, z] = L(s, n); qq.setFromEuler(eu.set(0, v.ang, 0));
+      if (v.moto) {
+        mCorpo.setMatrixAt(v.k, m4.compose(pq.set(x, GY - 0.06, z), qq, sv.set(1.9, 0.85, 0.55)));
+        of.set(-0.2, 0, 0).applyQuaternion(qq); mPiloto.setMatrixAt(v.k, m4.compose(pq.set(x + of.x, GY + 0.62, z + of.z), qq, sv.set(0.42, 0.62, 0.46)));
+        of.set(-0.12, 0, 0).applyQuaternion(qq); mCapacete.setMatrixAt(v.k, m4.compose(pq.set(x + of.x, GY + 1.42, z + of.z), qq, sv.set(1, 1, 1)));
+      } else {
+        corpo.setMatrixAt(v.k, m4.compose(pq.set(x, GY + 0.12, z), qq, sv.set(4.2, 0.85, 1.8)));
+        of.set(-0.25, 0, 0).applyQuaternion(qq); cabine.setMatrixAt(v.k, m4.compose(pq.set(x + of.x, GY + 0.95, z + of.z), qq, sv.set(2.2, 0.65, 1.6)));
+      }
+    }
+    P.forEach((p, k) => {
+      const [s, n] = p.eixo === 's' ? [p.u, p.c] : [p.c, p.u], [x, z] = L(s, n), bob = p.pausa > 0 ? 0 : Math.abs(Math.sin(p.fase)) * 0.035;
+      const ang = p.eixo === 's' ? (p.dir > 0 ? 0 : Math.PI) : (p.dir > 0 ? Math.PI / 2 : -Math.PI / 2);
+      qq.setFromEuler(eu.set(0, ang, p.pausa > 0 ? 0 : Math.sin(p.fase) * 0.04));
+      pPernas.setMatrixAt(k, m4.compose(pq.set(x, GY + bob, z), qq, sv.set(0.24, 0.84, 0.36)));
+      pTronco.setMatrixAt(k, m4.compose(pq.set(x, GY + 0.84 + bob, z), qq, sv.set(0.28, 0.6, 0.46)));
+      pCabeca.setMatrixAt(k, m4.compose(pq.set(x, GY + 1.6 + bob, z), qq, sv.set(1, 1, 1)));
+    });
+    for (const m of [corpo, cabine, mCorpo, mPiloto, mCapacete, pPernas, pTronco, pCabeca]) m.instanceMatrix.needsUpdate = true;
+  }
+  let acumulado = 0;
+  function atualizar(dt) {
+    acumulado += dt;
+    while (acumulado > 0.02) { passo(0.02); acumulado -= 0.02; if (acumulado > 0.2) acumulado = 0.2; }
+    desenhar();
+  }
+  return { atualizar, passo, V, P, FX, estado: () => { const c = {}; for (const v of V) { const k = v.vis ? v.est : 'oculto'; c[k] = (c[k] || 0) + 1; } return c; } };
+})();
+window.__transito = TRANSITO;
+
 const estrelas = (() => { const n = 700, pos = new Float32Array(n * 3);
   for (let k = 0; k < n; k++) { const a = rnd() * Math.PI * 2, y = rr(0.06, 1), r = Math.sqrt(1 - y * y); pos.set([Math.cos(a) * r * 1500, y * 1500, Math.sin(a) * r * 1500], k * 3); }
   const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
@@ -1289,6 +1577,7 @@ function quadro() {
   if (escavadeira.visible) { braco.rotation.z = -0.25 + Math.sin(agora * 1.3) * 0.3; escavadeira.rotation.y = Math.sin(agora * 0.2) * 0.8; }
   luzGrua.visible = ehNoiteCache && Math.floor(agora * 1.4) % 2 === 0;
   if (destaque.visible) destaque.userData.f.material.opacity = 0.18 + 0.1 * Math.sin(agora * 3);
+  TRANSITO.atualizar(dt);
   controls.update();
   renderer.render(scene, camera);
   if (!window.__maqueteOk) { window.__maqueteOk = true; clearTimeout(window.__maqueteTimer); $('fail').hidden = true; }
