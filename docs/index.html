@@ -1,1 +1,273 @@
-<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="theme-color" content="#FFFFFF"><title>JUAN - E.Civil</title><link rel="icon" type="image/png" href="/favicon.png"><link rel="stylesheet" href="/rsc/css/common.css"><script type="module" src="/rsc/js/common.js"></script><link rel="stylesheet" href="/rsc/css/main.css"><script type="module" src="/rsc/js/main.js"></script></head><body class="twhite"><header><div class="head-social"><a class="social" style="background-image:url(&quot;/rsc/img/icon_insta.svg&quot;)" href="https://www.instagram.com/"></a><a class="social" style="background-image:url(&quot;/rsc/img/icon_x.svg&quot;)" href="https://x.com/"></a><a class="social" style="background-image:url(&quot;/rsc/img/icon_in.svg&quot;)" href="https://br.linkedin.com/"></a><a class="social" style="background-image:url(&quot;/rsc/img/icon_whats.svg&quot;)" href="https://www.whatsapp.com/"></a></div><div class="head-menu"><a class="link">ínicio</a><a class="link">sobre</a><a class="link">serviços</a><a class="link">portfólio</a><a class="link">contato</a></div><div class="hmb" tabindex="0" style="display:none"><div class="hmb-ball"></div><div class="hmb-bar"></div></div></header><main><div class="section-view" id="view1"><div class="painel" style="background-image: url(&quot;/rsc/img/0.webp&quot;);left:0;width:50%;"></div><div class="painel" style="background-image: url(&quot;/rsc/img/1.webp&quot;);right:0;width:50%;"></div></div><div class="section-view" id="view2"><div class="painel" style="background-image: url(&quot;/rsc/img/2.webp&quot;);left:0;width:100%;backdrop-filter:blur(5px);opacity:0;display:none"></div></div><div class="painel" style="left:0"><h1 style="text-align:center;margin:3em 0">Volte mais tarde, site em desenvolvimento.</h1></div><div id="main-juan"></div><div class="section-view"></div></main></body></html>
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Juan · Engenharia Civil</title>
+<meta name="description" content="Juan, técnico em Edificações e estudante de Engenharia Civil. Regularização fundiária, projetos e desenho técnico, modelagem e render 3D e acompanhamento de obra.">
+<meta name="theme-color" content="#111315">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Juan · Engenharia Civil">
+<meta property="og:description" content="Do croqui à obra pronta: regularização fundiária, projetos, 3D e acompanhamento de obra.">
+<meta property="og:url" content="https://juan.eng.br/">
+<link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+<script>document.documentElement.classList.add('js');</script>
+</head>
+<body>
+
+<a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
+
+<header class="site-header">
+  <div class="container site-header__inner">
+    <div class="socials" aria-label="Redes sociais">
+      <a href="#" aria-label="Instagram" data-link="instagram"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.3" cy="6.7" r="0.9" class="fill"/></svg></a>
+      <a href="#" aria-label="X" data-link="x"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4l16 16M20 4L4 20"/></svg></a>
+      <a href="#" aria-label="LinkedIn" data-link="linkedin"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="M8 11v6M8 7.5v.01M12 17v-6M12 13.5a2.5 2.5 0 0 1 5 0V17"/></svg></a>
+      <a href="#" aria-label="WhatsApp" data-link="whatsapp"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l1.4-4A8.5 8.5 0 1 1 8.3 19z"/><path d="M9.2 8.6c0 3.4 2.8 6.2 6.2 6.2l.9-1.6-2-1-1 1a4.4 4.4 0 0 1-2.5-2.5l1-1-1-2z"/></svg></a>
+    </div>
+    <a class="brand" href="#inicio" aria-label="Juan, Engenharia Civil, início">
+      <span class="brand__name">JUAN</span><span class="brand__dot"></span><span class="brand__tag">E.CIVIL</span>
+    </a>
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="menu" aria-label="Abrir menu">
+      <span></span><span></span><span></span>
+    </button>
+    <nav id="menu" class="nav" aria-label="Principal">
+      <a href="#inicio">início</a>
+      <a href="#sobre">sobre</a>
+      <a href="#servicos">serviços</a>
+      <a href="#portfolio">portfólio</a>
+      <a href="#contato">contato</a>
+    </nav>
+  </div>
+</header>
+
+<main id="conteudo">
+
+<!-- TOPO: a obra em 4 etapas -->
+<section class="hero" id="inicio" aria-label="A obra em 4 etapas">
+  <div class="hero__stage" id="hero-stage">
+    <img class="hero__img" id="hero-base" src="assets/img/etapas/1-croqui.svg" alt="Croqui à mão de um edifício residencial de seis pavimentos">
+    <div class="hero__lens" aria-hidden="true"><img class="hero__img" id="hero-lens" src="assets/img/etapas/2-estrutura.svg" alt=""></div>
+    <div class="hero__scrim" aria-hidden="true"></div>
+    <div class="hero__ring" aria-hidden="true"></div>
+    <div class="hero__tag" aria-hidden="true">próxima: <span id="hero-next">Estrutura</span> · clique</div>
+  </div>
+  <div class="container hero__content">
+    <div class="hero__col" data-noadvance>
+      <p class="eyebrow">ENGENHARIA CIVIL · REGULARIZAÇÃO · 3D</p>
+      <h1 class="hero__title">Do croqui à obra pronta.</h1>
+      <p class="hero__text">Sou Juan, técnico em Edificações e estudante de Engenharia Civil. Acompanho cada etapa da obra, do primeiro traço à entrega.</p>
+      <div class="btn-row">
+        <a class="btn btn--accent" href="#portfolio">ver portfólio <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+        <a class="btn btn--outline" href="#contato">fale comigo</a>
+      </div>
+      <div class="steps">
+        <div class="steps__head"><span>A OBRA EM 4 ETAPAS</span><span id="steps-counter">01 / 04</span></div>
+        <div class="steps__list" role="group" aria-label="Etapas da obra">
+          <button type="button" class="step is-active" data-step="0" aria-pressed="true"><span class="step__num">01</span><span class="step__name">Projeto</span></button>
+          <button type="button" class="step" data-step="1" aria-pressed="false"><span class="step__num">02</span><span class="step__name">Estrutura</span></button>
+          <button type="button" class="step" data-step="2" aria-pressed="false"><span class="step__num">03</span><span class="step__name">Instalações</span></button>
+          <button type="button" class="step" data-step="3" aria-pressed="false"><span class="step__num">04</span><span class="step__name">Pronto</span></button>
+        </div>
+        <p class="steps__desc" aria-live="polite"><strong id="steps-name">01 · Projeto</strong> · <span id="steps-desc">croqui à mão e estudo de volumetria</span></p>
+        <p class="steps__hint"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="3" width="12" height="18" rx="6"/><path d="M12 7v3"/></svg><span class="hint-desktop">Passe o mouse no prédio para ver a próxima etapa. Clique para avançar.</span><span class="hint-touch">Toque no prédio para avançar de etapa.</span></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- NÚMEROS RÁPIDOS -->
+<section class="numbers" aria-label="Números rápidos">
+  <div class="container numbers__grid">
+    <div class="number" data-reveal><strong>6º período</strong><span>de Engenharia Civil em curso</span></div>
+    <div class="number" data-reveal><strong>Técnico</strong><span>em Edificações</span></div>
+    <div class="number" data-reveal><strong>Estágio</strong><span>acompanhando obra no dia a dia</span></div>
+    <div class="number" data-reveal><strong>6 softwares</strong><span>do desenho ao cálculo estrutural</span></div>
+  </div>
+</section>
+
+<!-- SOBRE -->
+<section class="section" id="sobre">
+  <div class="container about">
+    <div class="about__photo" data-reveal>
+      <img class="about__bg" src="assets/img/etapas/1-croqui.svg" alt="" loading="lazy">
+      <img class="about__juan" src="assets/img/juan.webp" alt="Juan de capacete branco e camisa social, de braços cruzados" loading="lazy" width="810" height="1100">
+      <span class="badge">JUAN · E.CIVIL</span>
+    </div>
+    <div class="about__text" data-reveal>
+      <p class="eyebrow eyebrow--accent">01 — SOBRE</p>
+      <h2 class="title">Técnico de formação, engenheiro em construção.</h2>
+      <p>Comecei pelo curso técnico em Edificações, passei pela Contabilidade e encontrei meu caminho na Engenharia Civil. Hoje, no estágio, acompanho a execução de obra de perto: medições, registros e a conversa com quem está no canteiro.</p>
+      <p>Gosto de juntar o técnico com o visual. Uso modelagem 3D para mostrar o projeto de um jeito que qualquer pessoa entende, e tenho interesse especial em regularização fundiária: colocar no papel a cidade que já existe.</p>
+      <dl class="facts">
+        <div><dt>Graduação</dt><dd>Engenharia Civil, 6º período · [UNIVERSIDADE]</dd></div>
+        <div><dt>Técnico</dt><dd>Edificações · [ESCOLA TÉCNICA]</dd></div>
+        <div><dt>Estágio</dt><dd>Engenharia de obras · [CONSTRUTORA]</dd></div>
+        <div><dt>Base</dt><dd>[CIDADE / ESTADO]</dd></div>
+      </dl>
+    </div>
+  </div>
+</section>
+
+<!-- FERRAMENTAS -->
+<section class="section section--alt" id="ferramentas">
+  <div class="container">
+    <div class="section__head" data-reveal>
+      <div><p class="eyebrow eyebrow--accent">02 — FERRAMENTAS</p><h2 class="title">O que eu uso no dia a dia.</h2></div>
+      <p class="section__lead">Do desenho técnico ao cálculo estrutural, passando pelo 3D e pelo mapa.</p>
+    </div>
+    <div class="tools">
+      <div class="tool" data-reveal><span class="tool__mark">CAD</span><div><h3>AutoCAD</h3><p>Plantas, cortes, fachadas e plantas de regularização.</p><small>DESENHO TÉCNICO</small></div></div>
+      <div class="tool" data-reveal><span class="tool__mark">RVT</span><div><h3>Revit</h3><p>Modelagem BIM e compatibilização do projeto.</p><small>BIM</small></div></div>
+      <div class="tool" data-reveal><span class="tool__mark">TQS</span><div><h3>TQS</h3><p>Modelagem e detalhamento de estruturas de concreto.</p><small>ESTRUTURAL</small></div></div>
+      <div class="tool" data-reveal><span class="tool__mark">TM</span><div><h3>Twinmotion</h3><p>Renders e vídeos realistas a partir do modelo.</p><small>RENDER</small></div></div>
+      <div class="tool" data-reveal><span class="tool__mark">BL</span><div><h3>Blender</h3><p>Modelagem livre e animações 3D.</p><small>3D E ANIMAÇÃO</small></div></div>
+      <div class="tool" data-reveal><span class="tool__mark">QG</span><div><h3>QGIS</h3><p>Mapas, geoprocessamento e levantamentos para regularização.</p><small>GEOPROCESSAMENTO</small></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- SERVIÇOS -->
+<section class="section" id="servicos">
+  <div class="container">
+    <div class="section__head" data-reveal>
+      <div><p class="eyebrow eyebrow--accent">03 — SERVIÇOS</p><h2 class="title">Do levantamento à obra pronta.</h2></div>
+      <p class="section__lead">Quatro frentes que se completam: entender o terreno, desenhar, mostrar em 3D e acompanhar a execução.</p>
+    </div>
+    <div class="services">
+      <article class="service" data-reveal>
+        <div class="service__top"><span>01</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6l6-3 6 3 6-3v15l-6 3-6-3-6 3z"/><path d="M9 3v15M15 6v15"/></svg></div>
+        <h3>Regularização fundiária</h3>
+        <p>Levantamento e documentação técnica para regularizar imóveis e núcleos urbanos.</p>
+        <ul><li>Levantamento do imóvel</li><li>Planta e memorial descritivo</li><li>Mapas no QGIS</li></ul>
+      </article>
+      <article class="service" data-reveal>
+        <div class="service__top"><span>02</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V4l16 16z"/><path d="M8 16v-4.5l4.5 4.5z"/></svg></div>
+        <h3>Projetos e desenho técnico</h3>
+        <p>Desenhos claros e completos, prontos para aprovação e para a obra.</p>
+        <ul><li>Plantas, cortes e fachadas</li><li>Estrutural no TQS</li><li>Detalhamento para execução</li></ul>
+      </article>
+      <article class="service" data-reveal>
+        <div class="service__top"><span>03</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l8.5 4.75v9.5L12 21.5l-8.5-4.75v-9.5z"/><path d="M3.5 7.25L12 12l8.5-4.75M12 12v9.5"/></svg></div>
+        <h3>Modelagem e render 3D</h3>
+        <p>O projeto em 3D e em imagens realistas, para enxergar antes de construir.</p>
+        <ul><li>Modelo BIM no Revit</li><li>Renders e vídeos no Twinmotion</li><li>Animações no Blender</li></ul>
+      </article>
+      <article class="service" data-reveal>
+        <div class="service__top"><span>04</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17h18M5 17v-2.5a7 7 0 0 1 14 0V17M10 8V5.5h4V8M3 20h18"/></svg></div>
+        <h3>Acompanhamento de obra</h3>
+        <p>Registro do andamento e relatórios visuais para quem quer acompanhar a obra.</p>
+        <ul><li>Visitas e registro fotográfico</li><li>Relatório de andamento</li><li>Previsto x executado</li></ul>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- PORTFÓLIO -->
+<section class="section section--alt section--flush" id="portfolio">
+  <div class="container section__head" data-reveal>
+    <div><p class="eyebrow eyebrow--accent">04 — PORTFÓLIO</p><h2 class="title">Trabalhos e projetos.</h2></div>
+    <div class="carousel__controls">
+      <span class="carousel__hint">arraste para o lado</span>
+      <button type="button" class="icon-btn" data-carousel="prev" aria-label="Projeto anterior"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></button>
+      <button type="button" class="icon-btn icon-btn--accent" data-carousel="next" aria-label="Próximo projeto"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+    </div>
+  </div>
+  <div class="carousel" id="carousel" tabindex="0" aria-label="Projetos do portfólio">
+    <article class="card">
+      <img class="card__img" src="assets/img/comunidade.webp" alt="Comunidade em encosta, área de regularização fundiária" loading="lazy" draggable="false">
+      <div class="card__body">
+        <span class="tag tag--accent">REGULARIZAÇÃO</span>
+        <h3>Regularização fundiária — [NOME DO NÚCLEO]</h3>
+        <p>Levantamento e planta fundiária para regularização via REURB. [Quantos lotes e qual foi o seu papel.]</p>
+        <div class="card__foot"><span>AutoCAD · QGIS</span><a href="#contato">saber mais →</a></div>
+      </div>
+    </article>
+    <article class="card">
+      <div class="card__img card__img--placeholder"><span>[PRINT DA APRESENTAÇÃO]</span></div>
+      <div class="card__body">
+        <span class="tag">OBRA</span>
+        <h3>Relatórios de andamento de obra</h3>
+        <p>Apresentações periódicas do avanço da obra, montadas a partir do diário de obra para reuniões com o cliente.</p>
+        <div class="card__foot"><span>Diário de Obra · Canva</span><a href="#contato">saber mais →</a></div>
+      </div>
+    </article>
+    <article class="card">
+      <img class="card__img" src="assets/img/render.webp" alt="Render 3D de residência de dois pavimentos" loading="lazy" draggable="false">
+      <div class="card__body">
+        <span class="tag">RENDER 3D</span>
+        <h3>Renders e modelos 3D</h3>
+        <p>Modelagem e renderização de edificações para mostrar o projeto antes de construir. [Nome do projeto]</p>
+        <div class="card__foot"><span>Revit · Twinmotion</span><a href="#contato">saber mais →</a></div>
+      </div>
+    </article>
+    <article class="card">
+      <img class="card__img" src="assets/img/desenho.webp" alt="Croqui a lápis de residência moderna" loading="lazy" draggable="false">
+      <div class="card__body">
+        <span class="tag">ESTUDOS</span>
+        <h3>Projetos de estudo</h3>
+        <p>Projetos feitos na faculdade e por conta própria, do croqui ao detalhamento. [Disciplina ou tema]</p>
+        <div class="card__foot"><span>AutoCAD · Revit · TQS</span><a href="#contato">saber mais →</a></div>
+      </div>
+    </article>
+    <article class="card">
+      <div class="card__img card__img--placeholder"><span>EM BREVE</span></div>
+      <div class="card__body">
+        <span class="tag">OBRA · 3D</span>
+        <h3>Maquete 3D de andamento de obra</h3>
+        <p>Site com o prédio em 3D mostrando o avanço da obra para os proprietários.</p>
+        <div class="card__foot"><span>Revit · Twinmotion · Web</span><span class="muted">em validação</span></div>
+      </div>
+    </article>
+  </div>
+  <div class="container"><div class="progress" aria-hidden="true"><div class="progress__bar" id="carousel-progress"></div></div></div>
+</section>
+
+<!-- CONTATO -->
+<section class="section" id="contato">
+  <div class="container contact">
+    <div class="contact__text" data-reveal>
+      <p class="eyebrow eyebrow--accent">05 — CONTATO</p>
+      <h2 class="title title--xl">Vamos conversar sobre o seu projeto?</h2>
+      <p>Clientes, construtoras e escritórios: me chama no WhatsApp ou deixe uma mensagem. Respondo o mais rápido que der.</p>
+      <div class="btn-row">
+        <a class="btn btn--accent" href="#" data-link="whatsapp">chamar no WhatsApp <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+        <a class="btn btn--outline" href="#" data-link="email">enviar e-mail</a>
+      </div>
+      <dl class="facts">
+        <div><dt>WhatsApp</dt><dd data-text="whatsapp">[(00) 00000-0000]</dd></div>
+        <div><dt>E-mail</dt><dd data-text="email">[seu@email]</dd></div>
+        <div><dt>Atendo em</dt><dd>[CIDADE / REGIÃO]</dd></div>
+      </dl>
+    </div>
+    <form class="form" id="contact-form" data-reveal novalidate>
+      <h3>Deixe sua mensagem</h3>
+      <label>Nome<input type="text" name="nome" placeholder="Seu nome" autocomplete="name" required></label>
+      <label>WhatsApp<input type="tel" name="telefone" placeholder="(00) 00000-0000" autocomplete="tel"></label>
+      <label>Assunto<select name="assunto"><option>Regularização fundiária</option><option>Projetos e desenho técnico</option><option>Modelagem e render 3D</option><option>Acompanhamento de obra</option><option>Vaga de estágio ou emprego</option></select></label>
+      <label>Mensagem<textarea name="mensagem" rows="4" placeholder="Conte rapidamente o que você precisa" required></textarea></label>
+      <button class="btn btn--accent btn--block" type="submit">enviar mensagem</button>
+      <p class="form__note" id="form-note" role="status"></p>
+    </form>
+  </div>
+</section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="container site-footer__inner">
+    <a class="brand" href="#inicio"><span class="brand__name">JUAN</span><span class="brand__dot"></span><span class="brand__tag">E.CIVIL</span></a>
+    <nav class="footer-nav" aria-label="Rodapé">
+      <a href="#inicio">início</a><a href="#sobre">sobre</a><a href="#servicos">serviços</a><a href="#portfolio">portfólio</a><a href="#contato">contato</a>
+    </nav>
+    <span class="site-footer__copy">© <span id="year">2026</span> · juan.eng.br · [REGISTRO CFT/CREA]</span>
+  </div>
+</footer>
+
+<script src="assets/js/main.js"></script>
+</body>
+</html>

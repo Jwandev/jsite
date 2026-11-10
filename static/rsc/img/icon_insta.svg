@@ -1,9 +1,0 @@
-<svg version="1.2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
-	<title>Novo Projeto</title>
-	<style>
-		.s0 { fill: #FFFFFF } 
-	</style>
-	<path id="Camada 3" fill-rule="evenodd" class="s0" d="m30 0h68c16.6 0 30 13.4 30 30v68c0 16.6-13.4 30-30 30h-68c-16.6 0-30-13.4-30-30v-68c0-16.6 13.4-30 30-30zm-20 35v58c0 13.8 11.2 25 25 25h58c13.8 0 25-11.2 25-25v-58c0-13.8-11.2-25-25-25h-58c-13.8 0-25 11.2-25 25z"/>
-	<path id="Forma 1" fill-rule="evenodd" class="s0" d="m99 38c-5 0-9-4-9-9 0-5 4-9 9-9 5 0 9 4 9 9 0 5-4 9-9 9z"/>
-	<path id="Forma 2" fill-rule="evenodd" class="s0" d="m64 95c-17.1 0-31-13.9-31-31 0-17.1 13.9-31 31-31 17.1 0 31 13.9 31 31 0 17.1-13.9 31-31 31zm21-31c0-11.6-9.4-21-21-21-11.6 0-21 9.4-21 21 0 11.6 9.4 21 21 21 11.6 0 21-9.4 21-21z"/>
-</svg>
