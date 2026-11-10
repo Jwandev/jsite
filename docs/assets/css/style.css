@@ -141,6 +141,17 @@ svg { width: 1em; height: 1em; fill: none; stroke: currentColor; stroke-width: 1
 .facts dt { flex: 0 0 150px; font-weight: 700; color: var(--muted); }
 .facts dd { margin: 0; font-weight: 600; }
 
+/* Experiência em obra */
+.experience { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); gap: 56px; align-items: start; }
+.experience__intro { position: sticky; top: calc(var(--header-h) + 40px); display: flex; flex-direction: column; gap: 18px; }
+.exp-list { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--border); }
+.exp-item { display: grid; grid-template-columns: 56px minmax(0, 1fr); gap: 20px; padding: 26px 0; border-bottom: 1px solid var(--border); }
+.exp-item__num { padding-top: 4px; font-size: 13px; font-weight: 800; letter-spacing: .1em; color: var(--accent); }
+.exp-item h3 { font-size: 20px; font-weight: 800; line-height: 1.25; }
+.exp-item p { margin-top: 8px; font-size: 15px; color: var(--muted); }
+.chips { list-style: none; margin: 12px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.chips li { padding: 4px 9px; border: 1px solid var(--outline); font-size: 12px; font-weight: 600; color: var(--text-2); }
+
 /* Ferramentas */
 .tools { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
 .tool { display: flex; gap: 18px; align-items: flex-start; padding: 24px; background: var(--surface); border: 1px solid var(--border); }
@@ -221,6 +232,8 @@ svg { width: 1em; height: 1em; fill: none; stroke: currentColor; stroke-width: 1
   .numbers__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .about { grid-template-columns: 1fr; }
   .contact { grid-template-columns: 1fr; }
+  .experience { grid-template-columns: 1fr; gap: 32px; }
+  .experience__intro { position: static; }
 }
 
 /* ---------- Celular ---------- */
@@ -247,5 +260,6 @@ svg { width: 1em; height: 1em; fill: none; stroke: currentColor; stroke-width: 1
   .about__juan { height: 440px; }
   .carousel__hint { display: none; }
   .facts dt { flex-basis: 100%; }
+  .exp-item { grid-template-columns: 40px minmax(0, 1fr); gap: 12px; }
   .site-footer__inner { flex-direction: column; align-items: flex-start; }
 }
